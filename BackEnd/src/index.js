@@ -19,6 +19,12 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use((req, res, next) => {
+  console.log("➡️ Incoming request:", req.method, req.originalUrl);
+  next();
+});
+
+
 // Correct base route prefix
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
@@ -32,8 +38,19 @@ app.use((req, res, next) => {
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
   app.get("*", (req, res) => {
+  if (req.originalUrl.includes("http")) {
+    // If malformed path like 'https://git.new/...' comes in
+    return res.status(400).send("Bad request.");
+  }
+
+  try {
     res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
-  });
+  } catch (err) {
+    console.error("Error in wildcard route:", err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 }
 
 server.listen(PORT, () => {
