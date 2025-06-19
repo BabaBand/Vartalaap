@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 
 const userSocketMap = {}; // { userId: socketId }
-let io;
+let io; // declared above for later export
 
 export const setupSocket = (server) => {
   io = new Server(server, {
@@ -29,6 +29,7 @@ export const setupSocket = (server) => {
   });
 };
 
-export const getReceiverSocketId = (userId) => {
-  return userSocketMap[userId];
-};
+export const getReceiverSocketId = (userId) => userSocketMap[userId];
+
+// ✅ Export io after it's initialized by setupSocket
+export { io };
