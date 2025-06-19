@@ -3,60 +3,53 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
+import http from "http";
+
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
-import { app, server } from "./lib/socket.js";
+import { setupSocket } from "./lib/socket.js";
 
 dotenv.config();
+
+const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5001;
 const __dirname = path.resolve();
 
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: "http://localhost:5173", // frontend URL
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
+// Log requests
 app.use((req, res, next) => {
-  console.log("➡️ Incoming request:", req.method, req.originalUrl);
+  console.log("➡️", req.method, req.originalUrl);
   next();
 });
 
-app.use((req, res, next) => {
-  if (!req.originalUrl.startsWith("/")) {
-    return res.status(400).send("Invalid path.");
-  }
-  next();
-});
-
-
-// Correct base route prefix
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-app.use((req, res, next) => {
-  console.log("Unhandled request to:", req.originalUrl);
-  next();
-});
-
-
+// Static files for production
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
   app.get("/*", (req, res) => {
-  try {
     res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
-  } catch (err) {
-    console.error("Error in wildcard route:", err);
-    res.status(500).send("Internal Server Error");
-  }
-});
-
-
+  });
 }
 
+// Initialize WebSocket
+setupSocket(server);
+
+// Start server
 server.listen(PORT, () => {
-  console.log("Server running on port:", PORT);
+  console.log(`🚀 Server running on port: ${PORT}`);
   connectDB();
 });
