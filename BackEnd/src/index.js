@@ -23,6 +23,12 @@ app.use(cors({
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
+app.use((req, res, next) => {
+  console.log("Unhandled request to:", req.originalUrl);
+  next();
+});
+
+
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
   app.get("*", (req, res) => {
