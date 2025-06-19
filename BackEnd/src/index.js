@@ -37,12 +37,7 @@ app.use((req, res, next) => {
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
-  app.get("*", (req, res) => {
-  if (req.originalUrl.includes("http")) {
-    // If malformed path like 'https://git.new/...' comes in
-    return res.status(400).send("Bad request.");
-  }
-
+  app.get("/*", (req, res) => {
   try {
     res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
   } catch (err) {
@@ -50,6 +45,7 @@ if (process.env.NODE_ENV === "production") {
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 }
 
