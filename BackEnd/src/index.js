@@ -24,6 +24,13 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  if (!req.originalUrl.startsWith("/")) {
+    return res.status(400).send("Invalid path.");
+  }
+  next();
+});
+
 
 // Correct base route prefix
 app.use("/api/auth", authRoutes);
